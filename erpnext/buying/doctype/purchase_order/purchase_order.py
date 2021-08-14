@@ -530,7 +530,7 @@ def make_sales_order_cpce_again(doc, handler=""):
     so.delivery_date = doc.schedule_date
     so.customer=doc.company
     for po_item in doc.items:
-        so.append("items", { "item_code":po_item.item_code, "item_group": po_item.item_group, "item_name":po_item.item_name, "qty": po_item.qty , "uom":po_item.uom, "conversion_factor": po_item.conversion_factor, "discount_percent": po_item.ek_disc_branch, "price_list_rate": po_item.original_price, "ek_discount": po_item.original_discount, "ek_disc_imp": po_item.original_discount, "ek_netto": po_item.original_price-(po_item.original_price*po_item.original_discount/100), "ek_project": po_item.original_price-(po_item.original_price*po_item.original_discount/100),  "ek_project_total": (po_item.original_price-(po_item.original_price*po_item.original_discount/100))*po_item.qty,})
+        so.append("items", { "item_code":po_item.item_code, "item_group": po_item.item_group, "item_name":po_item.item_name, "qty": po_item.qty , "uom":po_item.uom, "conversion_factor": po_item.conversion_factor, "price_list_rate": po_item.original_price, "ek_discount": po_item.original_discount, "ek_disc_imp": po_item.original_discount, "ek_netto": po_item.original_price-(po_item.original_price*po_item.original_discount/100), "ek_project": po_item.original_price-(po_item.original_price*po_item.original_discount/100),  "ek_project_total": (po_item.original_price-(po_item.original_price*po_item.original_discount/100))*po_item.qty, "selling_list": po_item.original_price, "margin_rate":po_item.rate, "calc_rate":po_item.rate, "add_margin": "20", "rate":po_item.rate})
     so.insert()
 
 @frappe.whitelist()
