@@ -1002,12 +1002,12 @@ def make_purchase_order_cpce(source_name, selected_items=None, target_doc=None):
 				["stock_uom", "stock_uom"],
 				["uom", "uom"],
 				["conversion_factor", "conversion_factor"],
-				["price_list_rate", "price_list_rate"],
 				["delivery_date", "schedule_date"]
 			],
 			"field_no_map": [
 				"rate",
 				"item_tax_template",
+				"price_list_rate",
 				"discount_percentage",
 				"discount_amount",
 				"supplier",

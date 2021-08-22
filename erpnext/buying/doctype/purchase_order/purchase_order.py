@@ -527,8 +527,11 @@ def make_purchase_order(source_name, selected_items=None, target_doc=None):
 @frappe.whitelist()
 def make_sales_order_cpce_again(doc, handler=""):
     so = frappe.new_doc("Sales Order")
+    so.po_no = doc.name
     so.delivery_date = doc.schedule_date
     so.customer = doc.company
+    so.incoterm = doc.incoterm
+    so.incoterm_city = doc.incoterm_city
     so.shipment_option = doc.shipment_option
     so.hq_contact_person = doc.hq_contact_person
     so.hq_contact_display = doc.hq_contact_display
@@ -544,7 +547,7 @@ def make_sales_order_cpce_again(doc, handler=""):
     so.individual_contact_person = doc.individual_contact_person
     so.individual_contact_phone = doc.individual_contact_phone
     for po_item in doc.items:
-        so.append("items", { "item_code":po_item.item_code, "item_group": po_item.item_group, "item_name":po_item.item_name, "qty": po_item.qty , "uom":po_item.uom, "conversion_factor": po_item.conversion_factor, "price_list_rate": po_item.original_price, "ek_discount": po_item.original_discount, "ek_disc_imp": po_item.original_discount, "ek_netto": po_item.original_price-(po_item.original_price*po_item.original_discount/100), "ek_project": po_item.original_price-(po_item.original_price*po_item.original_discount/100),  "ek_project_total": (po_item.original_price-(po_item.original_price*po_item.original_discount/100))*po_item.qty, "selling_list": po_item.original_price, "margin_rate":po_item.rate, "calc_rate":po_item.rate, "add_margin": "20", "rate":po_item.rate, "shipment_option":po_item.shipment_option})
+        so.append("items", { "item_code":po_item.item_code, "item_group": po_item.item_group, "item_name":po_item.item_name, "delivery_date": po_item.schedule_date, "qty": po_item.qty , "uom":po_item.uom, "conversion_factor": po_item.conversion_factor, "price_list_rate": po_item.original_price, "ek_discount": po_item.original_discount, "ek_disc_imp": po_item.original_discount, "ek_netto": po_item.original_price-(po_item.original_price*po_item.original_discount/100), "ek_project": po_item.original_price-(po_item.original_price*po_item.original_discount/100),  "ek_project_total": (po_item.original_price-(po_item.original_price*po_item.original_discount/100))*po_item.qty, "selling_list": po_item.original_price, "margin_rate":po_item.rate, "calc_rate":po_item.rate, "add_margin": "20", "rate":po_item.rate, "shipment_option":po_item.shipment_option, "delivery_week":po_item.delivery_week})
     so.insert()
 
 @frappe.whitelist()
