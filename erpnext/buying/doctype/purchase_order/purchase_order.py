@@ -540,14 +540,14 @@ def make_sales_order_cpce_again(doc, handler=""):
     so.branch_contact_person = doc.branch_contact_person
     so.branch_contact_display = doc.branch_contact_display
     so.branch_contact_phone = doc.branch_contact_phone
-    so.direct_address = doc.direct_address
+    so.shipping_address_name = doc.shipping_address_name
     so.direct_contact_person = doc.direct_contact_person
     so.direct_contact_phone = doc.direct_contact_phone
     so.individual_address = doc.individual_address
     so.individual_contact_person = doc.individual_contact_person
     so.individual_contact_phone = doc.individual_contact_phone
     for po_item in doc.items:
-        so.append("items", { "item_code":po_item.item_code, "item_group": po_item.item_group, "item_name":po_item.item_name, "delivery_date": po_item.schedule_date, "qty": po_item.qty , "uom":po_item.uom, "conversion_factor": po_item.conversion_factor, "price_list_rate": po_item.original_price, "ek_discount": po_item.original_discount, "ek_disc_imp": po_item.original_discount, "ek_netto": po_item.original_price-(po_item.original_price*po_item.original_discount/100), "ek_project": po_item.original_price-(po_item.original_price*po_item.original_discount/100),  "ek_project_total": (po_item.original_price-(po_item.original_price*po_item.original_discount/100))*po_item.qty, "selling_list": po_item.original_price, "margin_rate":po_item.rate, "calc_rate":po_item.rate, "add_margin": "20", "rate":po_item.rate, "shipment_option":po_item.shipment_option, "delivery_week":po_item.delivery_week})
+        so.append("items", { "item_code":po_item.item_code, "item_group": po_item.item_group, "branch_value": po_item.rate - (po_item.rate * po_item.ek_disc_branch/100), "discount_percent": po_item.project_ek_discount, "project_ek_discount": po_item.project_ek_discount, "item_name":po_item.item_name, "delivery_date": po_item.schedule_date, "qty": po_item.qty , "uom":po_item.uom, "conversion_factor": po_item.conversion_factor, "price_list_rate": po_item.original_price, "ek_discount": po_item.original_discount, "ek_disc_imp": po_item.original_discount, "ek_netto": po_item.original_price-(po_item.original_price*po_item.original_discount/100), "ek_disc_branch": po_item.ek_disc_branch, "ek_project": po_item.original_price-(po_item.original_price*po_item.original_discount/100),"ek_project_total": (po_item.original_price-(po_item.original_price*po_item.original_discount/100))*po_item.qty, "selling_list": po_item.original_price-(po_item.original_price*po_item.original_discount/100), "margin_rate":(po_item.original_price-(po_item.original_price*po_item.original_discount/100))/(1-(42/100)), "calc_rate":po_item.rate, "add_margin": "42", "rate":po_item.rate, "shipment_option":po_item.shipment_option, "delivery_week":po_item.delivery_week})
     so.insert()
 
 @frappe.whitelist()
