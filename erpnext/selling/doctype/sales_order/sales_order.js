@@ -44,6 +44,19 @@ frappe.ui.form.on("Sales Order", {
 			}
 		});
 	},
+	refresh: function(frm) {
+		if(frm.doc.docstatus === 1 && frm.doc.status !== 'Closed'
+			&& flt(frm.doc.per_delivered, 6) < 100 && flt(frm.doc.per_billed, 6) < 100) {
+			frm.add_custom_button(__('Update Items'), () => {
+				erpnext.utils.update_child_items({
+					frm: frm,
+					child_docname: "items",
+					child_doctype: "Sales Order Detail",
+					cannot_add_row: false,
+				})
+			});
+		}
+	},
 	onload: function(frm) {
 		if (!frm.doc.transaction_date){
 			frm.set_value('transaction_date', frappe.datetime.get_today())
@@ -99,7 +112,7 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 		this._super();
 		let allow_delivery = false;
 
-		if (doc.docstatus==1 && doc.workflow_state =="Submitted") {
+		if (doc.docstatus==1) {
 
 			if(this.frm.has_perm("submit")) {
 				if(doc.status === 'On Hold') {
@@ -139,7 +152,9 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 					if (!this.frm.doc.is_internal_customer) {
 						this.frm.add_custom_button(__('Purchase Order'), () => this.make_purchase_order(), __('Create'));
 
-						this.frm.add_custom_button(__('CPCE Purchase Order'), () => this.make_purchase_order_cpce(), __('Create'));
+						if(doc.company != "Canberra Packard Central Europe GmbH"){
+							this.frm.add_custom_button(__('CPCE Purchase Order'), () => this.make_purchase_order_cpce(), __('Create'));
+						}
 					}
 
 					this.frm.add_custom_button(__('Pick List'), () => this.create_pick_list(), __('Create'));
@@ -717,7 +732,7 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 						{
 							fieldtype:'Float',
 							fieldname:'pending_qty',
-							label: __('Pending Qty'),
+							label: __('Qty'),
 							read_only: 1,
 							in_list_view:1
 						},
@@ -727,13 +742,6 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
 							fieldname:'uom',
 							label: __('UOM'),
 							in_list_view:1,
-						},
-						{
-							fieldtype:'Data',
-							fieldname:'supplier',
-							label: __('Supplier'),
-							read_only:1,
-							in_list_view:1
 						},
 					]
 				}

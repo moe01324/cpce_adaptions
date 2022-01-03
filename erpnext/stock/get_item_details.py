@@ -194,7 +194,7 @@ def validate_item_details(args, item):
 		throw(_("Please specify Company"))
 
 	from erpnext.stock.doctype.item.item import validate_end_of_life
-	validate_end_of_life(item.name, item.end_of_life, item.disabled)
+	validate_end_of_life(item.name, item.end_of_life, item.disabled, item.invalid_after)
 
 	if args.transaction_type == "selling" and cint(item.has_variants):
 		throw(_("Item {0} is a template, please select one of its variants").format(item.name))
@@ -608,26 +608,31 @@ def get_default_supplier(args, item, item_group, brand):
 def get_price_list_rate(args, item_doc, out):
 	meta = frappe.get_meta(args.parenttype or args.doctype)
 
+	args['price_list'] = frappe.db.get_value("Item", args.item_code, "cpce_pricelist", cache=True)
+
 	if meta.get_field("currency") or args.get('currency'):
-		if not args.get("price_list_currency") or not args.get("plc_conversion_rate"):
+		#if not args.get("price_list_currency") or not args.get("plc_conversion_rate"):
 			# if currency and plc_conversion_rate exist then
 			# `get_price_list_currency_and_exchange_rate` has already been called
-			pl_details = get_price_list_currency_and_exchange_rate(args)
-			args.update(pl_details)
+		pl_details = get_price_list_currency_and_exchange_rate(args)
+		args.update(pl_details)
 
 		if meta.get_field("currency"):
 			validate_conversion_rate(args, meta)
 
 		if args.transaction_type=="buying":
-			if args.supplier == "Canberra Packard Central Europe GmbH":
-				price_list_rate = get_price_list_rate_for_Branch(args, item_doc.name) or 0
-			else:
+			if args.company == "Canberra Packard Central Europe GmbH":
 				price_list_rate = get_price_list_rate_for_Purchase(args, item_doc.name) or 0
+			else:
+				price_list_rate = get_price_list_rate_for_Branch(args, item_doc.name) or 0
 		else:
 			if args.company == "Canberra Packard Central Europe GmbH":
 				price_list_rate = get_price_list_rate_for(args, item_doc.name) or 0
 			else:
-				price_list_rate = get_price_list_rate_for_Branch(args, item_doc.name) or 0
+				if item_doc.item_group in ['CPPL', 'CPCZ', 'CPSK', 'CPBG', 'CPHU', 'CPRO', 'CPCE']:
+					price_list_rate = get_price_list_rate_for(args, item_doc.name) or 0
+				else:
+					price_list_rate = get_price_list_rate_for_Branch(args, item_doc.name) or 0
 
 		# variant
 		if not price_list_rate and item_doc.variant_of:
@@ -789,7 +794,7 @@ def get_item_price_Branch(args, item_code, ignore_party=False):
 		conditions += """ and %(posting_date)s between
 			ifnull(valid_from, '2000-01-01') and ifnull(valid_upto, '2500-12-31')"""
 
-	return frappe.db.sql(""" select name, selling_price, uom
+	return frappe.db.sql(""" select name, CEILING(selling_price), uom
 		from `tabItem Price` {conditions}
 		order by valid_from desc, batch_no desc, uom desc """.format(conditions=conditions), args)
 
@@ -961,9 +966,13 @@ def check_packing_list(price_list_rate_name, desired_qty, item_code):
 def validate_conversion_rate(args, meta):
 	from erpnext.controllers.accounts_controller import validate_conversion_rate
 
-	if (not args.conversion_rate
-		and args.currency==frappe.get_cached_value('Company',  args.company,  "default_currency")):
+	company_currency = frappe.get_cached_value('Company',  args.company,  "default_currency")
+	if (not args.conversion_rate and args.currency==company_currency):
 		args.conversion_rate = 1.0
+
+	if (not args.ignore_conversion_rate and args.conversion_rate == 1 and args.currency!=company_currency):
+		args.conversion_rate = get_exchange_rate(args.currency,
+			company_currency, args.transaction_date, "for_buying") or 1.0
 
 	# validate currency conversion rate
 	validate_conversion_rate(args.currency, args.conversion_rate,
@@ -989,7 +998,6 @@ def validate_conversion_rate(args, meta):
 				args.plc_conversion_rate = flt(args.plc_conversion_rate,
 					get_field_precision(meta.get_field("plc_conversion_rate"),
 					frappe._dict({"fields": args})))
-
 def get_party_item_code(args, item_doc, out):
 	if args.transaction_type=="selling" and args.customer:
 		out.customer_item_code = None
@@ -1249,11 +1257,9 @@ def get_price_list_currency_and_exchange_rate(args):
 	plc_conversion_rate = args.plc_conversion_rate
 	company_currency = get_company_currency(args.company)
 
-	if (not plc_conversion_rate) or (price_list_currency and args.price_list_currency \
-		and price_list_currency != args.price_list_currency):
-			# cksgb 19/09/2016: added args.transaction_date as posting_date argument for get_exchange_rate
-			plc_conversion_rate = get_exchange_rate(price_list_currency, company_currency,
-				args.transaction_date, args.exchange_rate) or plc_conversion_rate
+		# cksgb 19/09/2016: added args.transaction_date as posting_date argument for get_exchange_rate
+	plc_conversion_rate = get_exchange_rate(price_list_currency, company_currency,
+		args.transaction_date, args.exchange_rate) or plc_conversion_rate
 
 	return frappe._dict({
 		"price_list_currency": price_list_currency,

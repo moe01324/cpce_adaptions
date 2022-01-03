@@ -137,13 +137,6 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 			if(doc.status != "Closed") {
 				if (doc.status != "On Hold") {
 
-					if(doc.supplier == "Canberra Packard Central Europe GmbH"){
-						this.frm.add_custom_button(__('Purchase Order Supplier'), () => this.make_purchase_order(), __('Create'));
-
-					}
-
-
-
 					if(flt(doc.per_received) < 100 && allow_receipt) {
 						cur_frm.add_custom_button(__('Purchase Receipt'), this.make_purchase_receipt, __('Create'));
 						if(doc.is_subcontracted==="Yes" && me.has_unsupplied_items()) {

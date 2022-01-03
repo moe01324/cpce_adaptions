@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 import frappe
 import json
+import math
 from frappe.utils import cstr, flt, cint
 from frappe import msgprint, _
 from frappe.model.mapper import get_mapped_doc
@@ -526,29 +527,50 @@ def make_purchase_order(source_name, selected_items=None, target_doc=None):
 
 @frappe.whitelist()
 def make_sales_order_cpce_again(doc, handler=""):
-    so = frappe.new_doc("Sales Order")
-    so.po_no = doc.name
-    so.delivery_date = doc.schedule_date
-    so.customer = doc.company
-    so.incoterm = doc.incoterm
-    so.incoterm_city = doc.incoterm_city
-    so.shipment_option = doc.shipment_option
-    so.hq_contact_person = doc.hq_contact_person
-    so.hq_contact_display = doc.hq_contact_display
-    so.hq_contact_phone = doc.hq_contact_phone
-    so.branch_address = doc.branch_address
-    so.branch_contact_person = doc.branch_contact_person
-    so.branch_contact_display = doc.branch_contact_display
-    so.branch_contact_phone = doc.branch_contact_phone
-    so.shipping_address_name = doc.shipping_address_name
-    so.direct_contact_person = doc.direct_contact_person
-    so.direct_contact_phone = doc.direct_contact_phone
-    so.individual_address = doc.individual_address
-    so.individual_contact_person = doc.individual_contact_person
-    so.individual_contact_phone = doc.individual_contact_phone
-    for po_item in doc.items:
-        so.append("items", { "item_code":po_item.item_code, "item_group": po_item.item_group, "branch_value": po_item.rate - (po_item.rate * po_item.ek_disc_branch/100), "discount_percent": po_item.project_ek_discount, "project_ek_discount": po_item.project_ek_discount, "item_name":po_item.item_name, "delivery_date": po_item.schedule_date, "qty": po_item.qty , "uom":po_item.uom, "conversion_factor": po_item.conversion_factor, "price_list_rate": po_item.original_price, "ek_discount": po_item.original_discount, "ek_disc_imp": po_item.original_discount, "ek_netto": po_item.original_price-(po_item.original_price*po_item.original_discount/100), "ek_disc_branch": po_item.ek_disc_branch, "ek_project": po_item.original_price-(po_item.original_price*po_item.original_discount/100),"ek_project_total": (po_item.original_price-(po_item.original_price*po_item.original_discount/100))*po_item.qty, "selling_list": po_item.original_price-(po_item.original_price*po_item.original_discount/100), "margin_rate":(po_item.original_price-(po_item.original_price*po_item.original_discount/100))/(1-(42/100)), "calc_rate":po_item.rate, "add_margin": "42", "rate":po_item.rate, "shipment_option":po_item.shipment_option, "delivery_week":po_item.delivery_week})
-    so.insert()
+    if doc.supplier == "Canberra Packard Central Europe GmbH" and doc.amended_from is None:  
+        so = frappe.new_doc("Sales Order")
+        for po_item in doc.items:
+            so.append("items", { "item_code":po_item.item_code, "item_group": po_item.item_group, "discount_percent": po_item.project_ek_discount, "project_price_list_rate": po_item.project_price_list_rate, "project_ek_discount": po_item.project_ek_discount, "item_name":po_item.item_name, "delivery_date": po_item.schedule_date, "qty": po_item.qty , "uom":po_item.uom, "conversion_factor": po_item.conversion_factor, "price_list_rate": po_item.original_price, "ek_discount": po_item.original_discount, "ek_disc_imp": po_item.original_discount, "ek_netto": po_item.original_price-(po_item.original_price*po_item.ek_discount/100), "ek_disc_branch": po_item.ek_disc_branch, "ek_project": po_item.original_price-(po_item.original_price*po_item.ek_discount/100)-(po_item.original_price*po_item.project_ek_discount/100),"ek_project_total": (po_item.original_price-(po_item.original_price*po_item.ek_discount/100)-(po_item.original_price*po_item.project_ek_discount/100))*po_item.qty, "selling_list": po_item.original_price-(po_item.original_price*po_item.ek_discount/100), "margin_rate":math.ceil((po_item.original_price-(po_item.original_price*po_item.ek_discount/100))/(1-(42/100))), "calc_rate":po_item.rate, "add_margin": "42", "rate":po_item.rate, "shipment_option":po_item.shipment_option, "delivery_week":po_item.delivery_week})
+        so.ignore_permissions=True
+        so.flags.ignore_permissions = True
+        so.flags.ignore_links = True       
+        so.ignore_linked_doctypes = ["Company"]        
+        so.update({
+                "po_no": doc.name,
+                "delivery_date": doc.schedule_date,
+                "customer": doc.company,
+                "incoterm": doc.incoterm,
+                "incoterm_city": doc.incoterm_city,
+                "shipment_option": doc.shipment_option,
+                "hq_contact_person": doc.hq_contact_person,
+                "hq_contact_display": doc.hq_contact_display,
+                "hq_contact_phone": doc.hq_contact_phone,
+                "branch_address": doc.branch_address,
+                "branch_contact_person": doc.branch_contact_person,
+                "branch_contact_display": doc.branch_contact_display,
+                "branch_contact_phone": doc.branch_contact_phone,
+                "shipping_address_name": doc.shipping_address_name,
+                "direct_contact_person": doc.direct_contact_person,
+                "direct_contact_phone": doc.direct_contact_phone,
+                "individual_address": doc.individual_address,
+                "individual_contact_person": doc.individual_contact_person,
+                "individual_contact_phone": doc.individual_contact_phone,
+                "marking": doc.marking,
+                "closing_text_details": doc.closing_text_details,
+                "closing_text_details": doc.closing_text_details,
+                "communication_data_details": doc.communication_data_details,
+                "end_user_customer": doc.end_user_customer,
+                "end_user": doc.end_user,
+                "end_user_contact": doc.end_user_contact,
+                "end_user_contact_phone": doc.end_user_contact_phone,
+                "end_use": doc.end_use,
+                "compabbr": "AT",
+                "warranty_description": doc.warranty_description
+        })
+        so.ignore_permissions=True
+        so.company = 'Canberra Packard Central Europe GmbH'
+        so.save(ignore_permissions=True)
+        frappe.db.commit()
 
 @frappe.whitelist()
 def make_purchase_receipt(source_name, target_doc=None):

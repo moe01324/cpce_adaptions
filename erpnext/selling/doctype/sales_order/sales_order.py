@@ -180,7 +180,7 @@ class SalesOrder(SellingController):
 			update_coupon_code_count(self.coupon_code,'used')
 
 	def on_cancel(self):
-		self.ignore_linked_doctypes = ('GL Entry', 'Stock Ledger Entry')
+		self.ignore_linked_doctypes = ('GL Entry', 'Stock Ledger Entry', 'Purchase Order')
 		super(SalesOrder, self).on_cancel()
 
 		# Cannot cancel closed SO
@@ -961,9 +961,8 @@ def make_purchase_order_cpce(source_name, selected_items=None, target_doc=None):
 
 	def set_missing_values(source, target):
 		target.supplier = "Canberra Packard Central Europe GmbH"
-		target.apply_discount_on = ""
+		target.apply_discount_on = "Net Total"
 		target.additional_discount_percentage = 0.0
-		target.discount_amount = 0.0
 		target.inter_company_order_reference = ""
 		target.customer = ""
 		target.customer_name = ""
@@ -1006,8 +1005,8 @@ def make_purchase_order_cpce(source_name, selected_items=None, target_doc=None):
 			],
 			"field_no_map": [
 				"rate",
-				"item_tax_template",
 				"price_list_rate",
+				"item_tax_template",
 				"discount_percentage",
 				"discount_amount",
 				"supplier",

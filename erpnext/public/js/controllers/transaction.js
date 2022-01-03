@@ -1132,6 +1132,8 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 	},
 
 	plc_conversion_rate: function() {
+		var company_currency = this.get_company_currency();
+
 		if(this.frm.doc.price_list_currency === this.get_company_currency()) {
 			this.frm.set_value("plc_conversion_rate", 1.0);
 		} else if(this.frm.doc.price_list_currency === this.frm.doc.currency
@@ -1143,6 +1145,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 		if(!this.in_apply_price_list) {
 			this.apply_price_list(null, true);
 		}
+		console.log(this.frm.doc.plc_conversion_rate);
 	},
 
 	uom: function(doc, cdt, cdn) {
@@ -1671,7 +1674,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 				if (!r.exc) {
 					frappe.run_serially([
 						() => me.frm.set_value("price_list_currency", r.message.parent.price_list_currency),
-						() => me.frm.set_value("plc_conversion_rate", r.message.parent.plc_conversion_rate),
+						() => me.frm.set_value("plc_conversion_rate", me.frm.doc.plc_conversion_rate),
 						() => {
 							if(args.items.length) {
 								me._set_values_for_item_list(r.message.children);
@@ -2034,7 +2037,7 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 					if(r.message && !r.exc) {
 						me.frm.set_value("payment_schedule", r.message);
 						const company_currency = me.get_company_currency();
-						this.update_payment_schedule_grid_labels(company_currency);
+						me.update_payment_schedule_grid_labels(company_currency);
 					}
 				}
 			})
